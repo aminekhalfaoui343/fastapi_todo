@@ -1,0 +1,28 @@
+#!/bin/bash
+
+set -o errexit
+set -o pipefail
+set -o nounset
+
+# Wait for MySQL to be reachable on db:3306 (max ~30s)
+python - <<'PY'
+import socket, time, sys
+host = 'db'
+port = 3306
+for i in range(30):
+	try:
+		s = socket.create_connection((host, port), 2)
+		s.close()
+		print('DB reachable')
+		break
+	except Exception:
+		print('Waiting for DB...')
+		time.sleep(1)
+else:
+	print('DB not reachable after timeout', file=sys.stderr)
+	sys.exit(1)
+PY
+
+# Start the app (allow overriding PORT via env, default 8000)
+PORT=${PORT:-8000}
+uvicorn main:app --port ${PORT} --host 0.0.0.0

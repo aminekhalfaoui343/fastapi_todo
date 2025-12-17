@@ -1,0 +1,105 @@
+version: "3.9"
+
+services:
+  fastapi:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: fastapi-todo
+    command: /start
+    ports:
+      - "8000:8000"
+    volumes:
+      - .:/app
+    env_file:
+      - .env
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "5"
+    networks:
+      - observability
+
+  db:
+    image: mysql:8.0
+    container_name: fastapi-db
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: MimoTeck1793
+      MYSQL_DATABASE: fastapi_todoapp
+    ports:
+      - "4306:3306" # FIXED
+    volumes:
+      - db_data:/var/lib/mysql
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+    networks:
+      - observability
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.8.2
+    container_name: elasticsearch
+    environment:
+      discovery.type: single-node
+      xpack.security.enabled: "false"
+      ES_JAVA_OPTS: "-Xms512m -Xmx512m"
+    ports:
+      - "9200:9200"
+    volumes:
+      - es_data:/usr/share/elasticsearch/data
+    restart: unless-stopped
+    networks:
+      - observability
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:8.8.2
+    container_name: kibana
+    depends_on:
+      - elasticsearch
+    environment:
+      ELASTICSEARCH_HOSTS: http://elasticsearch:9200
+      xpack.security.enabled: "false"
+    ports:
+      - "5601:5601"
+    restart: unless-stopped
+    networks:
+      - observability
+
+  filebeat:
+    image: docker.elastic.co/beats/filebeat:8.8.2
+    container_name: filebeat
+    user: root
+    labels:
+      co.elastic.logs/enabled: "true"
+    command: [
+      "-e",
+      "--strict.perms=false"
+    ]
+    volumes:
+      - //var/run/docker.sock:/var/run/docker.sock
+      - ./filebeat/filebeat.yml:/usr/share/filebeat/filebeat.yml:ro
+    depends_on:
+      - elasticsearch
+    restart: unless-stopped
+
+volumes:
+  db_data:
+  es_data:
+
+networks:
+  observability:
+    driver: bridge
