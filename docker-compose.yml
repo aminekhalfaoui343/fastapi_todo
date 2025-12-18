@@ -6,6 +6,8 @@ services:
       context: .
       dockerfile: Dockerfile
     container_name: fastapi-todo
+    labels:
+      co.elastic.logs/enabled: "true"
     command: /start
     ports:
       - "8000:8000"
@@ -85,16 +87,16 @@ services:
     user: root
     labels:
       co.elastic.logs/enabled: "true"
-    command: [
-      "-e",
-      "--strict.perms=false"
-    ]
+    command: filebeat -e -strict.perms=false -c /usr/share/filebeat/filebeat.yml
     volumes:
       - //var/run/docker.sock:/var/run/docker.sock
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
       - ./filebeat/filebeat.yml:/usr/share/filebeat/filebeat.yml:ro
     depends_on:
       - elasticsearch
     restart: unless-stopped
+    networks:
+      - observability
 
 volumes:
   db_data:

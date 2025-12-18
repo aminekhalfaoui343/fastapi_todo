@@ -1,11 +1,12 @@
 filebeat.autodiscover:
   providers:
     - type: docker
+      host: "unix:///var/run/docker.sock"
       hints.enabled: true
       hints.default_config:
         type: container
         paths:
-          - /var/lib/docker/containers/${data.docker.container.id}/*.log
+          - /var/lib/docker/containers/${data.container.id}/*.log
 
 processors:
   - add_docker_metadata:
@@ -18,4 +19,5 @@ setup.kibana:
   host: "http://kibana:5601"
 
 logging.level: info
+logging.selectors: ["autodiscover", "docker", "cfgfile"]
 logging.to_files: false
