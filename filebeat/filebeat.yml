@@ -3,10 +3,15 @@ filebeat.autodiscover:
     - type: docker
       host: "unix:///var/run/docker.sock"
       hints.enabled: true
-      hints.default_config:
-        type: container
-        paths:
-          - /var/lib/docker/containers/${data.container.id}/*.log
+      hints.default_config.enabled: false
+      templates:
+        - condition:
+            contains:
+              docker.container.labels.co_elastic_logs/enabled: "true"
+          config:
+            - type: container
+              paths:
+                - /var/lib/docker/containers/${data.container.id}/*.log
 
 processors:
   - add_docker_metadata:
