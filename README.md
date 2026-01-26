@@ -1,3 +1,9 @@
+<p align="center">
+  <img src="https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white" alt="Docker" height="100" style="margin-right: 15px;"/>
+  <img src="https://img.shields.io/badge/Elasticsearch-005571?style=for-the-badge&logo=elasticsearch&logoColor=white" alt="Elasticsearch" height="100" style="margin-right: 15px;"/>
+  <img src="https://img.shields.io/badge/Kibana-005571?style=for-the-badge&logo=kibana&logoColor=white" alt="Kibana" height="100"/>
+</p>
+
 Surveillance et analyse des logs Docker (prototype)
 
 This workspace contains a small FastAPI app and a basic ELK + Filebeat setup to collect container logs.
